@@ -1,0 +1,20 @@
+{
+  "name": "app",
+  "scripts": {
+    "start": "npm run build:live",
+    "build": "tsc -p .",
+    "build:live": "nodemon --watch 'src/**/*.ts' --exec \"ts-node\" src/index.ts",
+    "ts-node": "ts-node"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "nodemon": "^3.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.504.0",
+    "aws-sdk": "^2.1550.0",
+    "dotenv": "^16.4.1"
+  }
+}
