@@ -7,7 +7,7 @@ const client = new SQSClient({ region: 'ap-northeast-1' })
 
 const params = {
   QueueUrl: queueUrl,
-  MessageBody: `Hello World! ${randomInt(1000)}`
+  MessageBody: `Hello World! ${randomInt(1000)}`,
 }
 const command = new SendMessageCommand(params)
 client

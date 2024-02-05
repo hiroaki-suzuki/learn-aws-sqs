@@ -7,7 +7,7 @@ const client = new SQSClient({ region: 'ap-northeast-1' })
 
 async function receive() {
   const params = {
-    QueueUrl: queueUrl
+    QueueUrl: queueUrl,
   }
   const command = new ReceiveMessageCommand(params)
   const response = await client.send(command)
@@ -25,7 +25,7 @@ async function receive() {
 async function deleteMessage(message: Message): Promise<void> {
   const params = {
     QueueUrl: queueUrl,
-    ReceiptHandle: message.ReceiptHandle
+    ReceiptHandle: message.ReceiptHandle,
   }
   const command = new DeleteMessageCommand(params)
   const response = await client.send(command)
