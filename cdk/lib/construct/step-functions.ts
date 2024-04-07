@@ -1,5 +1,5 @@
-import { Construct } from 'constructs'
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
+import { Construct } from 'constructs';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import {
   DefinitionBody,
   LogLevel,
@@ -7,10 +7,10 @@ import {
   Succeed,
   Wait,
   WaitTime,
-} from 'aws-cdk-lib/aws-stepfunctions'
-import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks'
-import { Duration, RemovalPolicy } from 'aws-cdk-lib'
-import { EventBridgeLambda } from './event-bridge-lambda'
+} from 'aws-cdk-lib/aws-stepfunctions';
+import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks';
+import { Duration } from 'aws-cdk-lib';
+import { EventBridgeLambda } from './event-bridge-lambda';
 import {
   Effect,
   IRole,
@@ -18,34 +18,35 @@ import {
   PolicyStatement,
   Role,
   ServicePrincipal,
-} from 'aws-cdk-lib/aws-iam'
-import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs'
+} from 'aws-cdk-lib/aws-iam';
+import { LogGroup } from 'aws-cdk-lib/aws-logs';
+import { BaseLogGroup } from '../base/base-log-group';
 
 export interface StepFunctionsProps {
-  namePrefix: string
+  namePrefix: string;
 }
 
 export class StepFunctions extends Construct {
-  public readonly stateMachine: StateMachine
+  public readonly stateMachine: StateMachine;
 
   constructor(scope: Construct, id: string, props: StepFunctionsProps) {
-    super(scope, id)
+    super(scope, id);
 
-    const { namePrefix } = props
+    const { namePrefix } = props;
 
     // SQSのメッセージを受けるLambdaの作成
     const eventBridgeLambda = new EventBridgeLambda(this, 'Lambda', {
       namePrefix: namePrefix,
-    })
+    });
 
     // Step Functionsのロールを作成
     const role = this.createStateMachineRole(
       namePrefix,
       eventBridgeLambda.receiveSqsMessageFunction,
-    )
+    );
 
     // Step FunctionsのLogGroupの作成
-    const logGroup = this.createStateMachineLogGroup(namePrefix)
+    const logGroup = this.createStateMachineLogGroup(namePrefix);
 
     // Step FunctionsのState作成
     this.stateMachine = this.createStateMachine(
@@ -53,7 +54,7 @@ export class StepFunctions extends Construct {
       eventBridgeLambda.receiveSqsMessageFunction,
       role,
       logGroup,
-    )
+    );
   }
 
   private createStateMachineRole(
@@ -61,7 +62,7 @@ export class StepFunctions extends Construct {
     receiveSqsMessageFunction: NodejsFunction,
   ): IRole {
     const role = new Role(this, 'Role', {
-      roleName: `${namePrefix}StateMachineRole`,
+      roleName: `${namePrefix}-state-machine-role`,
       assumedBy: new ServicePrincipal('states.amazonaws.com'),
       managedPolicies: [
         {
@@ -98,17 +99,15 @@ export class StepFunctions extends Construct {
           ],
         }),
       },
-    })
+    });
 
-    return role.withoutPolicyUpdates()
+    return role.withoutPolicyUpdates();
   }
 
   private createStateMachineLogGroup(namePrefix: string): LogGroup {
-    return new LogGroup(this, 'LogGroup', {
-      logGroupName: `/aws/states/${namePrefix}StateMachine`,
-      retention: RetentionDays.ONE_YEAR,
-      removalPolicy: RemovalPolicy.DESTROY,
-    })
+    return new BaseLogGroup(this, 'LogGroup', {
+      logGroupName: `/aws/states/${namePrefix}-state-machine`,
+    });
   }
 
   private createStateMachine(
@@ -120,16 +119,16 @@ export class StepFunctions extends Construct {
     const startJob = new LambdaInvoke(this, 'ReceiveSqsMessageLambdaInvoke', {
       lambdaFunction: receiveSqsMessageFunction,
       outputPath: '$.Payload',
-    })
+    });
 
     const waitX = new Wait(this, 'WaitXSeconds', {
       time: WaitTime.secondsPath('$.waitSeconds'),
-    })
+    });
 
-    const definition = startJob.next(waitX).next(new Succeed(this, 'Succeed'))
+    const definition = startJob.next(waitX).next(new Succeed(this, 'Succeed'));
 
     return new StateMachine(this, 'StateMachine', {
-      stateMachineName: `${namePrefix}StateMachine`,
+      stateMachineName: `${namePrefix}-state-machine`,
       definitionBody: DefinitionBody.fromChainable(definition),
       timeout: Duration.minutes(5),
       comment: 'learn SQS & EventBridge Pipes state machine',
@@ -139,6 +138,6 @@ export class StepFunctions extends Construct {
         includeExecutionData: true,
         level: LogLevel.ALL,
       },
-    })
+    });
   }
 }

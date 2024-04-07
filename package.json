@@ -1,7 +1,12 @@
 {
   "name": "learn-aws-sqs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "deploy:dev": "cd cdk && npm run cdk -- deploy learn-aws-sqs-dev -c environment=dev",
+    "destroy:dev": "cd cdk && npm run cdk -- destroy learn-aws-sqs-dev -c environment=dev",
+    "deploy-lambda:dev": "cd cdk && npm run cdk -- deploy learn-aws-sqs-lambda-trigger-dev -c environment=dev",
+    "destroy-lambda:dev": "cd cdk && npm run cdk -- destroy learn-aws-sqs-lambda-trigger-dev -c environment=dev",
+    "deploy-event:dev": "cd cdk && npm run cdk -- deploy learn-aws-sqs-event-pipe-state-dev -c environment=dev",
+    "destroy-event:dev": "cd cdk && npm run cdk -- destroy learn-aws-sqs-event-pipe-state-dev -c environment=dev"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.20.0",

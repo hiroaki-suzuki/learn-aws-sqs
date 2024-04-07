@@ -1,34 +1,34 @@
-import { Construct } from 'constructs'
+import { Construct } from 'constructs';
 import {
   Effect,
   PolicyDocument,
   PolicyStatement,
   Role,
   ServicePrincipal,
-} from 'aws-cdk-lib/aws-iam'
-import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs'
-import { RemovalPolicy } from 'aws-cdk-lib'
-import { CfnPipe } from 'aws-cdk-lib/aws-pipes'
-import { Queue } from 'aws-cdk-lib/aws-sqs'
-import { StateMachine } from 'aws-cdk-lib/aws-stepfunctions'
+} from 'aws-cdk-lib/aws-iam';
+import { LogGroup } from 'aws-cdk-lib/aws-logs';
+import { CfnPipe } from 'aws-cdk-lib/aws-pipes';
+import { Queue } from 'aws-cdk-lib/aws-sqs';
+import { StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
+import { BaseLogGroup } from '../base/base-log-group';
 
 interface EventBridgePipeProps {
-  namePrefix: string
-  queue: Queue
-  stateMachine: StateMachine
+  namePrefix: string;
+  queue: Queue;
+  stateMachine: StateMachine;
 }
 
 export class EventBridgePipe extends Construct {
   constructor(scope: Construct, id: string, props: EventBridgePipeProps) {
-    super(scope, id)
+    super(scope, id);
 
-    const { namePrefix, queue, stateMachine } = props
+    const { namePrefix, queue, stateMachine } = props;
 
     // EventBridge Pipeのロールを作成
-    const eventBridgePipeRole = this.createEventBridgePipeRole(namePrefix, queue, stateMachine)
+    const eventBridgePipeRole = this.createEventBridgePipeRole(namePrefix, queue, stateMachine);
 
     // EventBridge Pipeのロググループを作成
-    const eventBridgePipeLogGroup = this.createEventBridgePipeLogGroup(namePrefix)
+    const eventBridgePipeLogGroup = this.createEventBridgePipeLogGroup(namePrefix);
 
     // EventBridge Pipeの作成
     this.createSqsLambdaStatePipe(
@@ -37,7 +37,7 @@ export class EventBridgePipe extends Construct {
       eventBridgePipeLogGroup,
       queue,
       stateMachine,
-    )
+    );
   }
 
   private createEventBridgePipeRole(
@@ -46,7 +46,7 @@ export class EventBridgePipe extends Construct {
     stateMachine: StateMachine,
   ): Role {
     return new Role(this, 'Role', {
-      roleName: `${namePrefix}EventBridgePipeRole`,
+      roleName: `${namePrefix}-event-bridge-pipe-role`,
       assumedBy: new ServicePrincipal('pipes.amazonaws.com'),
       inlinePolicies: {
         EventBridgePipePolicy: new PolicyDocument({
@@ -64,15 +64,13 @@ export class EventBridgePipe extends Construct {
           ],
         }),
       },
-    })
+    });
   }
 
   private createEventBridgePipeLogGroup(namePrefix: string): LogGroup {
-    return new LogGroup(this, 'LogGroup', {
-      logGroupName: `/aws/pipes/${namePrefix}EventBridgePipe`,
-      retention: RetentionDays.ONE_YEAR,
-      removalPolicy: RemovalPolicy.DESTROY,
-    })
+    return new BaseLogGroup(this, 'LogGroup', {
+      logGroupName: `/aws/pipes/${namePrefix}-event-bridge-pipe`,
+    });
   }
 
   private createSqsLambdaStatePipe(
@@ -83,7 +81,7 @@ export class EventBridgePipe extends Construct {
     stateMachine: StateMachine,
   ): CfnPipe {
     return new CfnPipe(this, 'SqsLambdaStatePipe', {
-      name: `${namePrefix}SqsLambdaStatePipe`,
+      name: `${namePrefix}-sqs-lambda-state-pipe`,
       roleArn: pipeRole.roleArn,
       source: queue.queueArn,
       sourceParameters: {
@@ -104,6 +102,6 @@ export class EventBridgePipe extends Construct {
         },
         includeExecutionData: ['ALL'],
       },
-    })
+    });
   }
 }

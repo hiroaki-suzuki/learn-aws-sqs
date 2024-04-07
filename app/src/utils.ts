@@ -1,1 +1,1 @@
-export const queueUrl = process.env.QUEUE_URL
+export const queueUrl = process.env.QUEUE_URL;

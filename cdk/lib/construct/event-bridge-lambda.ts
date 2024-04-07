@@ -1,26 +1,26 @@
-import { Construct } from 'constructs'
-import { IRole, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
-import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs'
-import { Duration, RemovalPolicy } from 'aws-cdk-lib'
+import { Construct } from 'constructs';
+import { IRole, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 
 export interface LambdaProps {
-  namePrefix: string
+  namePrefix: string;
 }
 
 export class EventBridgeLambda extends Construct {
-  public readonly receiveSqsMessageFunction: NodejsFunction
+  public readonly receiveSqsMessageFunction: NodejsFunction;
 
   constructor(scope: Construct, id: string, props: LambdaProps) {
-    super(scope, id)
+    super(scope, id);
 
-    const { namePrefix } = props
+    const { namePrefix } = props;
 
-    const role = this.createEventBridgePipeLambdaRole(namePrefix)
-    const func = this.createReceiveSqsMessageFunction(namePrefix, role)
-    this.createReceiveSqsMessageFunctionLogGroup(func)
+    const role = this.createEventBridgePipeLambdaRole(namePrefix);
+    const func = this.createReceiveSqsMessageFunction(namePrefix, role);
+    this.createReceiveSqsMessageFunctionLogGroup(func);
 
-    this.receiveSqsMessageFunction = func
+    this.receiveSqsMessageFunction = func;
   }
 
   private createEventBridgePipeLambdaRole(namePrefix: string): IRole {
@@ -32,7 +32,7 @@ export class EventBridgeLambda extends Construct {
           managedPolicyArn: 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
         },
       ],
-    })
+    });
   }
 
   private createReceiveSqsMessageFunction(namePrefix: string, role: IRole): NodejsFunction {
@@ -42,7 +42,7 @@ export class EventBridgeLambda extends Construct {
       handler: 'handler',
       role: role,
       timeout: Duration.seconds(30),
-    })
+    });
   }
 
   private createReceiveSqsMessageFunctionLogGroup(func: NodejsFunction): LogGroup {
@@ -50,6 +50,6 @@ export class EventBridgeLambda extends Construct {
       logGroupName: `/aws/lambda/${func.functionName}`,
       retention: RetentionDays.ONE_YEAR,
       removalPolicy: RemovalPolicy.DESTROY,
-    })
+    });
   }
 }
