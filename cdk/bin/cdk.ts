@@ -7,6 +7,7 @@ import { LearnSqsEventPipeState } from '../lib/learn-sqs-event-pipe-state';
 import { EnvValues } from '../lib/env/env-values';
 import { setRemovalPolicy } from '../lib/aspect/remove-policy-setter';
 import { addCommonTags } from '../lib/aspect/common-tag-setter';
+import { LearnSqsS3LambdaStack } from '../lib/learn-sqs-s3-lambda';
 
 const app = new cdk.App();
 
@@ -52,3 +53,16 @@ const eventPipeStateStack = new LearnSqsEventPipeState(app, namePrefix, {
 });
 setRemovalPolicy(eventPipeStateStack, cdk.RemovalPolicy.DESTROY);
 addCommonTags(eventPipeStateStack, { project: projectName, env: envValues.env });
+
+// S3 > SQS > Lambda
+namePrefix = `${projectName}-s3-sqs-lambda-${envValues.env}`;
+const s3SqsLambdaStack = new LearnSqsS3LambdaStack(app, namePrefix, {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: 'ap-northeast-1',
+  },
+  namePrefix,
+  envValues,
+});
+setRemovalPolicy(s3SqsLambdaStack, cdk.RemovalPolicy.DESTROY);
+addCommonTags(s3SqsLambdaStack, { project: projectName, env: envValues.env });
